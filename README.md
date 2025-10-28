@@ -1,15 +1,14 @@
 # Construction Project Manager
 
-A clean, minimal construction project management web application.
+A simple, working construction project management web application.
 
 ## Features
 
-- **Dashboard**: Overview of active projects and team statistics
-- **Project Management**: Create, edit, and track construction projects
+- **Dashboard**: Overview statistics
+- **Project Management**: Add, edit, delete construction projects  
 - **Team Management**: Manage architects, supervisors, and contractors
-- **Role-based Access**: Admin and read-only user modes
-- **Data Export/Import**: JSON backup and restore functionality
-- **Responsive Design**: Works on desktop and mobile devices
+- **Clean Design**: Black and white interface with bright status indicators
+- **Simple & Functional**: Focus on working functionality
 
 ## Live Demo
 
@@ -17,19 +16,16 @@ Access the application at: https://juruk.github.io/construction-project-manager/
 
 ## Usage
 
-1. Navigate between tabs using the top navigation
-2. Add new items using the "Add" buttons
-3. Edit or delete items using the action buttons (Admin mode only)
-4. Export/import your data using the header controls
-5. Switch between Admin and Read Only modes
+1. Click tabs to navigate between sections
+2. Use "Add" buttons to create new items
+3. Edit or delete items using the buttons on each card
+4. View overview statistics on the dashboard
 
 ## Technology
 
-- Pure HTML5, CSS3, and JavaScript
-- Local Storage for data persistence
+- Pure HTML, CSS, and JavaScript
+- No external dependencies
 - Responsive design
-- Clean, minimal interface
+- In-memory data storage
 
-## License
-
-Open source - MIT License
+Built with simplicity and functionality in mind.
