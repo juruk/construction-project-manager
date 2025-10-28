@@ -1,55 +1,35 @@
 # Construction Project Manager
 
-A comprehensive construction project management web application built with HTML, CSS, and JavaScript.
+A clean, minimal construction project management web application.
 
 ## Features
 
-- **Dashboard**: Overview of active projects, team members, and progress charts
-- **Project Management**: Full CRUD operations with phases, timelines, and file management
+- **Dashboard**: Overview of active projects and team statistics
+- **Project Management**: Create, edit, and track construction projects
 - **Team Management**: Manage architects, supervisors, and contractors
-- **Access Control**: Admin and read-only user roles
-- **Data Management**: JSON export/import functionality
-- **GitHub Integration**: Sync capabilities (demo mode)
+- **Role-based Access**: Admin and read-only user modes
+- **Data Export/Import**: JSON backup and restore functionality
 - **Responsive Design**: Works on desktop and mobile devices
+
+## Live Demo
+
+Access the application at: https://juruk.github.io/construction-project-manager/
 
 ## Usage
 
-The application is deployed at: https://juruk.github.io/construction-project-manager/
+1. Navigate between tabs using the top navigation
+2. Add new items using the "Add" buttons
+3. Edit or delete items using the action buttons (Admin mode only)
+4. Export/import your data using the header controls
+5. Switch between Admin and Read Only modes
 
-### Getting Started
+## Technology
 
-1. Open the application in your browser
-2. Use the navigation tabs to switch between different sections
-3. Add projects, team members, and manage your construction portfolio
-4. Export your data for backup or import existing data
-
-### User Roles
-
-- **Admin**: Full access to create, edit, and delete all items
-- **Read Only**: View-only access to all data
-
-### Features
-
-- **Projects**: Track multiple construction projects with budgets, timelines, and progress
-- **Team Management**: Manage architects, supervisors, and contractors with detailed profiles
-- **Dashboard**: Visual overview with charts and recent activity
-- **Data Export/Import**: Backup and restore your data in JSON format
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-
-## Local Development
-
-1. Clone this repository
-2. Open index.html in your browser
-3. Start managing your construction projects!
-
-## Technology Stack
-
-- HTML5
-- CSS3 with responsive design
-- Vanilla JavaScript
-- Chart.js for data visualization
+- Pure HTML5, CSS3, and JavaScript
 - Local Storage for data persistence
+- Responsive design
+- Clean, minimal interface
 
 ## License
 
-This project is open source and available under the MIT License.
+Open source - MIT License
