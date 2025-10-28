@@ -4,113 +4,739 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Construction Project Manager</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: #fff;
+            padding: 20px;
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+        }
+
+        .nav {
+            background: #333;
+            padding: 0;
+        }
+
+        .nav-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .nav-btn:hover {
+            background: #555;
+        }
+
+        .nav-btn.active {
+            background: #007bff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .status-active { background: #28a745; color: white; }
+        .status-planning { background: #6f42c1; color: white; }
+        .status-completed { background: #007bff; color: white; }
+        .status-pending { background: #ffc107; color: #333; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
-    <div class="app">
-        <!-- Header -->
-        <header class="header">
-            <div class="container">
-                <h1>Construction Project Manager</h1>
-                <div class="header-controls">
-                    <select id="userRole" class="control">
-                        <option value="admin">Admin</option>
-                        <option value="readonly">Read Only</option>
-                    </select>
-                    <button id="exportBtn" class="btn btn-secondary">Export</button>
-                    <input type="file" id="importFile" accept=".json" style="display: none;">
-                    <button id="importBtn" class="btn btn-secondary">Import</button>
+    <div class="header">
+        <h1>Construction Project Manager</h1>
+    </div>
+
+    <nav class="nav">
+        <button class="nav-btn active" onclick="showTab('dashboard')">Dashboard</button>
+        <button class="nav-btn" onclick="showTab('projects')">Projects</button>
+        <button class="nav-btn" onclick="showTab('architects')">Architects</button>
+        <button class="nav-btn" onclick="showTab('supervisors')">Supervisors</button>
+        <button class="nav-btn" onclick="showTab('contractors')">Contractors</button>
+    </nav>
+
+    <div class="container">
+        <!-- Dashboard -->
+        <div id="dashboard" class="tab-content active">
+            <h2>Dashboard</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="projectsCount">0</div>
+                    <div class="stat-label">Projects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="architectsCount">0</div>
+                    <div class="stat-label">Architects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="supervisorsCount">0</div>
+                    <div class="stat-label">Supervisors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="contractorsCount">0</div>
+                    <div class="stat-label">Contractors</div>
                 </div>
             </div>
-        </header>
+        </div>
 
-        <!-- Navigation -->
-        <nav class="nav">
-            <div class="container">
-                <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
-                <button class="nav-btn" data-tab="projects">Projects</button>
-                <button class="nav-btn" data-tab="architects">Architects</button>
-                <button class="nav-btn" data-tab="supervisors">Supervisors</button>
-                <button class="nav-btn" data-tab="contractors">Contractors</button>
+        <!-- Projects -->
+        <div id="projects" class="tab-content">
+            <div class="section-header">
+                <h2>Projects</h2>
+                <button class="btn" onclick="showModal('Add Project', createProjectForm())">Add Project</button>
             </div>
-        </nav>
+            <div id="projectsList" class="items-grid"></div>
+        </div>
 
-        <!-- Main Content -->
-        <main class="main">
-            <div class="container">
-                <!-- Dashboard Tab -->
-                <section id="dashboard" class="tab-content active">
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-number" id="activeProjectsCount">0</div>
-                            <div class="stat-label">Active Projects</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="teamMembersCount">0</div>
-                            <div class="stat-label">Team Members</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="completedTasksCount">0</div>
-                            <div class="stat-label">Completed Tasks</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="overdueItemsCount">0</div>
-                            <div class="stat-label">Overdue Items</div>
-                        </div>
-                    </div>
-                    <div class="recent-activity">
-                        <h2>Recent Activity</h2>
-                        <div id="activityList" class="activity-list"></div>
-                    </div>
-                </section>
-
-                <!-- Projects Tab -->
-                <section id="projects" class="tab-content">
-                    <div class="section-header">
-                        <h2>Projects</h2>
-                        <button id="addProjectBtn" class="btn btn-primary">Add Project</button>
-                    </div>
-                    <div id="projectsList" class="items-grid"></div>
-                </section>
-
-                <!-- Architects Tab -->
-                <section id="architects" class="tab-content">
-                    <div class="section-header">
-                        <h2>Architects</h2>
-                        <button id="addArchitectBtn" class="btn btn-primary">Add Architect</button>
-                    </div>
-                    <div id="architectsList" class="items-grid"></div>
-                </section>
-
-                <!-- Supervisors Tab -->
-                <section id="supervisors" class="tab-content">
-                    <div class="section-header">
-                        <h2>Supervisors</h2>
-                        <button id="addSupervisorBtn" class="btn btn-primary">Add Supervisor</button>
-                    </div>
-                    <div id="supervisorsList" class="items-grid"></div>
-                </section>
-
-                <!-- Contractors Tab -->
-                <section id="contractors" class="tab-content">
-                    <div class="section-header">
-                        <h2>Contractors</h2>
-                        <button id="addContractorBtn" class="btn btn-primary">Add Contractor</button>
-                    </div>
-                    <div id="contractorsList" class="items-grid"></div>
-                </section>
+        <!-- Architects -->
+        <div id="architects" class="tab-content">
+            <div class="section-header">
+                <h2>Architects</h2>
+                <button class="btn" onclick="showModal('Add Architect', createArchitectForm())">Add Architect</button>
             </div>
-        </main>
+            <div id="architectsList" class="items-grid"></div>
+        </div>
+
+        <!-- Supervisors -->
+        <div id="supervisors" class="tab-content">
+            <div class="section-header">
+                <h2>Supervisors</h2>
+                <button class="btn" onclick="showModal('Add Supervisor', createSupervisorForm())">Add Supervisor</button>
+            </div>
+            <div id="supervisorsList" class="items-grid"></div>
+        </div>
+
+        <!-- Contractors -->
+        <div id="contractors" class="tab-content">
+            <div class="section-header">
+                <h2>Contractors</h2>
+                <button class="btn" onclick="showModal('Add Contractor', createContractorForm())">Add Contractor</button>
+            </div>
+            <div id="contractorsList" class="items-grid"></div>
+        </div>
     </div>
 
     <!-- Modal -->
     <div id="modal" class="modal">
         <div class="modal-content">
-            <button class="modal-close">&times;</button>
+            <span class="close" onclick="closeModal()">&times;</span>
             <div id="modalBody"></div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Data storage
+        let data = {
+            projects: [],
+            architects: [],
+            supervisors: [],
+            contractors: []
+        };
+
+        // Load sample data
+        function loadSampleData() {
+            if (data.projects.length === 0) {
+                data.projects = [
+                    {
+                        id: 1,
+                        name: "Downtown Office Complex",
+                        location: "123 Main St",
+                        status: "active",
+                        budget: 2500000,
+                        description: "Modern office building with 20 floors"
+                    },
+                    {
+                        id: 2,
+                        name: "Residential Tower",
+                        location: "456 Oak Ave",
+                        status: "planning",
+                        budget: 1800000,
+                        description: "Luxury residential building"
+                    }
+                ];
+
+                data.architects = [
+                    {
+                        id: 1,
+                        name: "Sarah Johnson",
+                        email: "sarah@example.com",
+                        phone: "(555) 123-4567",
+                        specialization: "Commercial Architecture"
+                    }
+                ];
+
+                data.supervisors = [
+                    {
+                        id: 1,
+                        name: "Mike Thompson",
+                        email: "mike@example.com",
+                        phone: "(555) 234-5678",
+                        department: "Construction Management"
+                    }
+                ];
+
+                data.contractors = [
+                    {
+                        id: 1,
+                        name: "David Martinez",
+                        company: "Elite Construction LLC",
+                        email: "david@example.com",
+                        phone: "(555) 345-6789",
+                        trade: "General Contractor"
+                    }
+                ];
+            }
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active from all buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Update dashboard if dashboard is selected
+            if (tabName === 'dashboard') {
+                updateDashboard();
+            }
+        }
+
+        // Update dashboard statistics
+        function updateDashboard() {
+            document.getElementById('projectsCount').textContent = data.projects.length;
+            document.getElementById('architectsCount').textContent = data.architects.length;
+            document.getElementById('supervisorsCount').textContent = data.supervisors.length;
+            document.getElementById('contractorsCount').textContent = data.contractors.length;
+        }
+
+        // Modal functions
+        function showModal(title, content) {
+            document.getElementById('modalBody').innerHTML = '<h3>' + title + '</h3>' + content;
+            document.getElementById('modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // Generate unique ID
+        function generateId() {
+            return Math.max(...[
+                ...data.projects.map(p => p.id || 0),
+                ...data.architects.map(a => a.id || 0),
+                ...data.supervisors.map(s => s.id || 0),
+                ...data.contractors.map(c => c.id || 0),
+                0
+            ]) + 1;
+        }
+
+        // Project functions
+        function createProjectForm(project = {}) {
+            return `
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="projectName" class="form-control" value="${project.name || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="projectLocation" class="form-control" value="${project.location || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="projectStatus" class="form-control">
+                        <option value="planning" ${project.status === 'planning' ? 'selected' : ''}>Planning</option>
+                        <option value="active" ${project.status === 'active' ? 'selected' : ''}>Active</option>
+                        <option value="completed" ${project.status === 'completed' ? 'selected' : ''}>Completed</option>
+                        <option value="pending" ${project.status === 'pending' ? 'selected' : ''}>Pending</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Budget</label>
+                    <input type="number" id="projectBudget" class="form-control" value="${project.budget || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="projectDescription" class="form-control">${project.description || ''}</textarea>
+                </div>
+                <button class="btn" onclick="saveProject(${project.id || 'null'})">Save</button>
+            `;
+        }
+
+        function saveProject(id) {
+            const projectData = {
+                name: document.getElementById('projectName').value,
+                location: document.getElementById('projectLocation').value,
+                status: document.getElementById('projectStatus').value,
+                budget: parseInt(document.getElementById('projectBudget').value) || 0,
+                description: document.getElementById('projectDescription').value
+            };
+
+            if (id) {
+                const index = data.projects.findIndex(p => p.id === id);
+                data.projects[index] = { ...data.projects[index], ...projectData };
+            } else {
+                data.projects.push({ id: generateId(), ...projectData });
+            }
+
+            renderProjects();
+            closeModal();
+        }
+
+        function editProject(id) {
+            const project = data.projects.find(p => p.id === id);
+            showModal('Edit Project', createProjectForm(project));
+        }
+
+        function deleteProject(id) {
+            if (confirm('Are you sure you want to delete this project?')) {
+                data.projects = data.projects.filter(p => p.id !== id);
+                renderProjects();
+            }
+        }
+
+        function renderProjects() {
+            const container = document.getElementById('projectsList');
+            container.innerHTML = data.projects.map(project => `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">${project.name}</div>
+                        <div class="card-actions">
+                            <button class="btn btn-sm" onclick="editProject(${project.id})">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteProject(${project.id})">Delete</button>
+                        </div>
+                    </div>
+                    <div class="status status-${project.status}">${project.status}</div>
+                    <p><strong>Location:</strong> ${project.location || 'Not specified'}</p>
+                    <p><strong>Budget:</strong> $${project.budget.toLocaleString()}</p>
+                    <p><strong>Description:</strong> ${project.description || 'No description'}</p>
+                </div>
+            `).join('');
+        }
+
+        // Architect functions
+        function createArchitectForm(architect = {}) {
+            return `
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="architectName" class="form-control" value="${architect.name || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="architectEmail" class="form-control" value="${architect.email || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="architectPhone" class="form-control" value="${architect.phone || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Specialization</label>
+                    <input type="text" id="architectSpecialization" class="form-control" value="${architect.specialization || ''}">
+                </div>
+                <button class="btn" onclick="saveArchitect(${architect.id || 'null'})">Save</button>
+            `;
+        }
+
+        function saveArchitect(id) {
+            const architectData = {
+                name: document.getElementById('architectName').value,
+                email: document.getElementById('architectEmail').value,
+                phone: document.getElementById('architectPhone').value,
+                specialization: document.getElementById('architectSpecialization').value
+            };
+
+            if (id) {
+                const index = data.architects.findIndex(a => a.id === id);
+                data.architects[index] = { ...data.architects[index], ...architectData };
+            } else {
+                data.architects.push({ id: generateId(), ...architectData });
+            }
+
+            renderArchitects();
+            closeModal();
+        }
+
+        function editArchitect(id) {
+            const architect = data.architects.find(a => a.id === id);
+            showModal('Edit Architect', createArchitectForm(architect));
+        }
+
+        function deleteArchitect(id) {
+            if (confirm('Are you sure you want to delete this architect?')) {
+                data.architects = data.architects.filter(a => a.id !== id);
+                renderArchitects();
+            }
+        }
+
+        function renderArchitects() {
+            const container = document.getElementById('architectsList');
+            container.innerHTML = data.architects.map(architect => `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">${architect.name}</div>
+                        <div class="card-actions">
+                            <button class="btn btn-sm" onclick="editArchitect(${architect.id})">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteArchitect(${architect.id})">Delete</button>
+                        </div>
+                    </div>
+                    <p><strong>Email:</strong> ${architect.email || 'Not provided'}</p>
+                    <p><strong>Phone:</strong> ${architect.phone || 'Not provided'}</p>
+                    <p><strong>Specialization:</strong> ${architect.specialization || 'General'}</p>
+                </div>
+            `).join('');
+        }
+
+        // Supervisor functions
+        function createSupervisorForm(supervisor = {}) {
+            return `
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="supervisorName" class="form-control" value="${supervisor.name || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="supervisorEmail" class="form-control" value="${supervisor.email || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="supervisorPhone" class="form-control" value="${supervisor.phone || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <input type="text" id="supervisorDepartment" class="form-control" value="${supervisor.department || ''}">
+                </div>
+                <button class="btn" onclick="saveSupervisor(${supervisor.id || 'null'})">Save</button>
+            `;
+        }
+
+        function saveSupervisor(id) {
+            const supervisorData = {
+                name: document.getElementById('supervisorName').value,
+                email: document.getElementById('supervisorEmail').value,
+                phone: document.getElementById('supervisorPhone').value,
+                department: document.getElementById('supervisorDepartment').value
+            };
+
+            if (id) {
+                const index = data.supervisors.findIndex(s => s.id === id);
+                data.supervisors[index] = { ...data.supervisors[index], ...supervisorData };
+            } else {
+                data.supervisors.push({ id: generateId(), ...supervisorData });
+            }
+
+            renderSupervisors();
+            closeModal();
+        }
+
+        function editSupervisor(id) {
+            const supervisor = data.supervisors.find(s => s.id === id);
+            showModal('Edit Supervisor', createSupervisorForm(supervisor));
+        }
+
+        function deleteSupervisor(id) {
+            if (confirm('Are you sure you want to delete this supervisor?')) {
+                data.supervisors = data.supervisors.filter(s => s.id !== id);
+                renderSupervisors();
+            }
+        }
+
+        function renderSupervisors() {
+            const container = document.getElementById('supervisorsList');
+            container.innerHTML = data.supervisors.map(supervisor => `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">${supervisor.name}</div>
+                        <div class="card-actions">
+                            <button class="btn btn-sm" onclick="editSupervisor(${supervisor.id})">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteSupervisor(${supervisor.id})">Delete</button>
+                        </div>
+                    </div>
+                    <p><strong>Email:</strong> ${supervisor.email || 'Not provided'}</p>
+                    <p><strong>Phone:</strong> ${supervisor.phone || 'Not provided'}</p>
+                    <p><strong>Department:</strong> ${supervisor.department || 'General'}</p>
+                </div>
+            `).join('');
+        }
+
+        // Contractor functions
+        function createContractorForm(contractor = {}) {
+            return `
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="contractorName" class="form-control" value="${contractor.name || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Company</label>
+                    <input type="text" id="contractorCompany" class="form-control" value="${contractor.company || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="contractorEmail" class="form-control" value="${contractor.email || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="contractorPhone" class="form-control" value="${contractor.phone || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Trade</label>
+                    <input type="text" id="contractorTrade" class="form-control" value="${contractor.trade || ''}">
+                </div>
+                <button class="btn" onclick="saveContractor(${contractor.id || 'null'})">Save</button>
+            `;
+        }
+
+        function saveContractor(id) {
+            const contractorData = {
+                name: document.getElementById('contractorName').value,
+                company: document.getElementById('contractorCompany').value,
+                email: document.getElementById('contractorEmail').value,
+                phone: document.getElementById('contractorPhone').value,
+                trade: document.getElementById('contractorTrade').value
+            };
+
+            if (id) {
+                const index = data.contractors.findIndex(c => c.id === id);
+                data.contractors[index] = { ...data.contractors[index], ...contractorData };
+            } else {
+                data.contractors.push({ id: generateId(), ...contractorData });
+            }
+
+            renderContractors();
+            closeModal();
+        }
+
+        function editContractor(id) {
+            const contractor = data.contractors.find(c => c.id === id);
+            showModal('Edit Contractor', createContractorForm(contractor));
+        }
+
+        function deleteContractor(id) {
+            if (confirm('Are you sure you want to delete this contractor?')) {
+                data.contractors = data.contractors.filter(c => c.id !== id);
+                renderContractors();
+            }
+        }
+
+        function renderContractors() {
+            const container = document.getElementById('contractorsList');
+            container.innerHTML = data.contractors.map(contractor => `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">${contractor.name}</div>
+                        <div class="card-actions">
+                            <button class="btn btn-sm" onclick="editContractor(${contractor.id})">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteContractor(${contractor.id})">Delete</button>
+                        </div>
+                    </div>
+                    <p><strong>Company:</strong> ${contractor.company || 'Individual'}</p>
+                    <p><strong>Email:</strong> ${contractor.email || 'Not provided'}</p>
+                    <p><strong>Phone:</strong> ${contractor.phone || 'Not provided'}</p>
+                    <p><strong>Trade:</strong> ${contractor.trade || 'General'}</p>
+                </div>
+            `).join('');
+        }
+
+        // Initialize app
+        function init() {
+            loadSampleData();
+            renderProjects();
+            renderArchitects();
+            renderSupervisors();
+            renderContractors();
+            updateDashboard();
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
