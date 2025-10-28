@@ -5,107 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Construction Project Manager</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div id="app">
+    <div class="app">
+        <!-- Header -->
         <header class="header">
-            <div class="header-content">
+            <div class="container">
                 <h1>Construction Project Manager</h1>
                 <div class="header-controls">
-                    <select id="userRole" class="role-selector">
+                    <select id="userRole" class="control">
                         <option value="admin">Admin</option>
                         <option value="readonly">Read Only</option>
                     </select>
-                    <button id="exportData" class="btn btn-success">Export Data</button>
-                    <input type="file" id="importData" accept=".json" style="display:none">
-                    <button id="importBtn" class="btn btn-info">Import Data</button>
-                    <button id="syncGitHub" class="btn btn-warning">Sync GitHub</button>
+                    <button id="exportBtn" class="btn btn-secondary">Export</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                    <button id="importBtn" class="btn btn-secondary">Import</button>
                 </div>
             </div>
         </header>
 
-        <nav class="nav-tabs">
-            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-            <button class="tab-btn" data-tab="projects">Projects</button>
-            <button class="tab-btn" data-tab="architects">Architects</button>
-            <button class="tab-btn" data-tab="supervisors">Supervisors</button>
-            <button class="tab-btn" data-tab="contractors">Contractors</button>
+        <!-- Navigation -->
+        <nav class="nav">
+            <div class="container">
+                <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
+                <button class="nav-btn" data-tab="projects">Projects</button>
+                <button class="nav-btn" data-tab="architects">Architects</button>
+                <button class="nav-btn" data-tab="supervisors">Supervisors</button>
+                <button class="nav-btn" data-tab="contractors">Contractors</button>
+            </div>
         </nav>
 
-        <!-- Dashboard Tab -->
-        <div id="dashboard" class="tab-content active">
-            <div class="dashboard-grid">
-                <div class="stat-card">
-                    <h3>Active Projects</h3>
-                    <div class="stat-number" id="activeProjects">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Team Members</h3>
-                    <div class="stat-number" id="teamMembers">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Completed Tasks</h3>
-                    <div class="stat-number" id="completedTasks">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Overdue Items</h3>
-                    <div class="stat-number" id="overdueItems">0</div>
-                </div>
-            </div>
-            
-            <div class="chart-container">
-                <h3>Project Progress Overview</h3>
-                <canvas id="progressChart"></canvas>
-            </div>
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <!-- Dashboard Tab -->
+                <section id="dashboard" class="tab-content active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="activeProjectsCount">0</div>
+                            <div class="stat-label">Active Projects</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="teamMembersCount">0</div>
+                            <div class="stat-label">Team Members</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="completedTasksCount">0</div>
+                            <div class="stat-label">Completed Tasks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="overdueItemsCount">0</div>
+                            <div class="stat-label">Overdue Items</div>
+                        </div>
+                    </div>
+                    <div class="recent-activity">
+                        <h2>Recent Activity</h2>
+                        <div id="activityList" class="activity-list"></div>
+                    </div>
+                </section>
 
-            <div class="recent-activity">
-                <h3>Recent Activity</h3>
-                <div id="activityFeed" class="activity-feed"></div>
-            </div>
-        </div>
+                <!-- Projects Tab -->
+                <section id="projects" class="tab-content">
+                    <div class="section-header">
+                        <h2>Projects</h2>
+                        <button id="addProjectBtn" class="btn btn-primary">Add Project</button>
+                    </div>
+                    <div id="projectsList" class="items-grid"></div>
+                </section>
 
-        <!-- Projects Tab -->
-        <div id="projects" class="tab-content">
-            <div class="tab-header">
-                <h2>Projects</h2>
-                <button id="addProject" class="btn btn-primary">Add Project</button>
-            </div>
-            <div id="projectsList" class="cards-container"></div>
-        </div>
+                <!-- Architects Tab -->
+                <section id="architects" class="tab-content">
+                    <div class="section-header">
+                        <h2>Architects</h2>
+                        <button id="addArchitectBtn" class="btn btn-primary">Add Architect</button>
+                    </div>
+                    <div id="architectsList" class="items-grid"></div>
+                </section>
 
-        <!-- Architects Tab -->
-        <div id="architects" class="tab-content">
-            <div class="tab-header">
-                <h2>Architects</h2>
-                <button id="addArchitect" class="btn btn-primary">Add Architect</button>
-            </div>
-            <div id="architectsList" class="cards-container"></div>
-        </div>
+                <!-- Supervisors Tab -->
+                <section id="supervisors" class="tab-content">
+                    <div class="section-header">
+                        <h2>Supervisors</h2>
+                        <button id="addSupervisorBtn" class="btn btn-primary">Add Supervisor</button>
+                    </div>
+                    <div id="supervisorsList" class="items-grid"></div>
+                </section>
 
-        <!-- Supervisors Tab -->
-        <div id="supervisors" class="tab-content">
-            <div class="tab-header">
-                <h2>Supervisors</h2>
-                <button id="addSupervisor" class="btn btn-primary">Add Supervisor</button>
+                <!-- Contractors Tab -->
+                <section id="contractors" class="tab-content">
+                    <div class="section-header">
+                        <h2>Contractors</h2>
+                        <button id="addContractorBtn" class="btn btn-primary">Add Contractor</button>
+                    </div>
+                    <div id="contractorsList" class="items-grid"></div>
+                </section>
             </div>
-            <div id="supervisorsList" class="cards-container"></div>
-        </div>
-
-        <!-- Contractors Tab -->
-        <div id="contractors" class="tab-content">
-            <div class="tab-header">
-                <h2>Contractors</h2>
-                <button id="addContractor" class="btn btn-primary">Add Contractor</button>
-            </div>
-            <div id="contractorsList" class="cards-container"></div>
-        </div>
+        </main>
     </div>
 
-    <!-- Modal for forms -->
+    <!-- Modal -->
     <div id="modal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
+            <button class="modal-close">&times;</button>
             <div id="modalBody"></div>
         </div>
     </div>
