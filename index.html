@@ -22,6 +22,63 @@
             padding: 20px;
             border-bottom: 2px solid #ddd;
             text-align: center;
+            position: relative;
+        }
+
+        .sync-container {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sync-status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .sync-status.synced {
+            background: #28a745;
+            color: white;
+        }
+
+        .sync-status.syncing {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .sync-status.error {
+            background: #dc3545;
+            color: white;
+        }
+
+        .sync-status.offline {
+            background: #6c757d;
+            color: white;
+        }
+
+        .sync-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .sync-button:hover {
+            background: #0056b3;
+        }
+
+        .sync-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
         }
 
         .nav {
@@ -213,11 +270,39 @@
             color: #666;
             margin-top: 5px;
         }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            z-index: 1001;
+            display: none;
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.info {
+            background: #007bff;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>Construction Project Manager</h1>
+        <div class="sync-container">
+            <div id="syncStatus" class="sync-status offline">Offline</div>
+            <button id="syncButton" class="sync-button" onclick="manualSync()">Sync</button>
+        </div>
     </div>
 
     <nav class="nav">
@@ -297,14 +382,260 @@
         </div>
     </div>
 
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
     <script>
+        // Configuration - Replace with your repository details
+        const GITHUB_REPO = 'juruk/construction-project-manager';
+        const GITHUB_TOKEN = 'your_github_token_here'; // Users need to add their token
+        const DATA_FILE_PATH = 'construction-data.json';
+
         // Data storage
         let data = {
             projects: [],
             architects: [],
             supervisors: [],
-            contractors: []
+            contractors: [],
+            lastSync: null
         };
+
+        // Sync state management
+        let syncState = {
+            isOnline: navigator.onLine,
+            isSyncing: false,
+            lastError: null
+        };
+
+        // Initialize GitHub API
+        const github = {
+            baseUrl: 'https://api.github.com',
+            
+            async request(method, path, body = null) {
+                if (!GITHUB_TOKEN || GITHUB_TOKEN === 'your_github_token_here') {
+                    throw new Error('GitHub token not configured');
+                }
+
+                const response = await fetch(`${this.baseUrl}${path}`, {
+                    method,
+                    headers: {
+                        'Authorization': `Bearer ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: body ? JSON.stringify(body) : null
+                });
+
+                if (!response.ok) {
+                    throw new Error(`GitHub API error: ${response.status}`);
+                }
+
+                return response.json();
+            },
+
+            async getFileContent(path) {
+                try {
+                    const result = await this.request('GET', `/repos/${GITHUB_REPO}/contents/${path}`);
+                    return JSON.parse(atob(result.content));
+                } catch (error) {
+                    if (error.message.includes('404')) {
+                        return null; // File doesn't exist yet
+                    }
+                    throw error;
+                }
+            },
+
+            async updateFile(path, content, message) {
+                const data = {
+                    message,
+                    content: btoa(JSON.stringify(content, null, 2))
+                };
+
+                // Check if file exists to get SHA
+                try {
+                    const existing = await this.request('GET', `/repos/${GITHUB_REPO}/contents/${path}`);
+                    data.sha = existing.sha;
+                } catch (error) {
+                    // File doesn't exist, that's fine
+                }
+
+                return this.request('PUT', `/repos/${GITHUB_REPO}/contents/${path}`, data);
+            }
+        };
+
+        // Storage management
+        const storage = {
+            saveToLocalStorage() {
+                try {
+                    localStorage.setItem('construction-data', JSON.stringify(data));
+                    localStorage.setItem('construction-data-timestamp', Date.now().toString());
+                } catch (error) {
+                    console.error('Failed to save to localStorage:', error);
+                }
+            },
+
+            loadFromLocalStorage() {
+                try {
+                    const stored = localStorage.getItem('construction-data');
+                    if (stored) {
+                        return JSON.parse(stored);
+                    }
+                } catch (error) {
+                    console.error('Failed to load from localStorage:', error);
+                }
+                return null;
+            },
+
+            async saveToGitHub() {
+                if (!syncState.isOnline || GITHUB_TOKEN === 'your_github_token_here') {
+                    return false;
+                }
+
+                try {
+                    setSyncStatus('syncing');
+                    data.lastSync = new Date().toISOString();
+                    
+                    await github.updateFile(
+                        DATA_FILE_PATH,
+                        data,
+                        `Update construction data - ${new Date().toLocaleString()}`
+                    );
+                    
+                    this.saveToLocalStorage();
+                    setSyncStatus('synced');
+                    showNotification('Data synced to GitHub successfully', 'success');
+                    return true;
+                } catch (error) {
+                    console.error('Failed to sync to GitHub:', error);
+                    setSyncStatus('error');
+                    syncState.lastError = error.message;
+                    showNotification(`Sync failed: ${error.message}`, 'error');
+                    return false;
+                }
+            },
+
+            async loadFromGitHub() {
+                if (!syncState.isOnline || GITHUB_TOKEN === 'your_github_token_here') {
+                    return null;
+                }
+
+                try {
+                    setSyncStatus('syncing');
+                    const githubData = await github.getFileContent(DATA_FILE_PATH);
+                    
+                    if (githubData) {
+                        setSyncStatus('synced');
+                        showNotification('Data loaded from GitHub', 'success');
+                        return githubData;
+                    } else {
+                        setSyncStatus('synced');
+                        return null;
+                    }
+                } catch (error) {
+                    console.error('Failed to load from GitHub:', error);
+                    setSyncStatus('error');
+                    syncState.lastError = error.message;
+                    showNotification(`Failed to load from GitHub: ${error.message}`, 'error');
+                    return null;
+                }
+            }
+        };
+
+        // UI Management
+        function setSyncStatus(status) {
+            const statusElement = document.getElementById('syncStatus');
+            const syncButton = document.getElementById('syncButton');
+            
+            statusElement.className = `sync-status ${status}`;
+            
+            switch (status) {
+                case 'synced':
+                    statusElement.textContent = 'Synced';
+                    syncButton.disabled = false;
+                    syncState.isSyncing = false;
+                    break;
+                case 'syncing':
+                    statusElement.textContent = 'Syncing...';
+                    syncButton.disabled = true;
+                    syncState.isSyncing = true;
+                    break;
+                case 'error':
+                    statusElement.textContent = 'Error';
+                    syncButton.disabled = false;
+                    syncState.isSyncing = false;
+                    break;
+                case 'offline':
+                    statusElement.textContent = 'Offline';
+                    syncButton.disabled = true;
+                    syncState.isSyncing = false;
+                    break;
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 4000);
+        }
+
+        // Data management with auto-sync
+        async function saveAndSync() {
+            storage.saveToLocalStorage();
+            if (syncState.isOnline && !syncState.isSyncing) {
+                await storage.saveToGitHub();
+            }
+        }
+
+        async function manualSync() {
+            if (syncState.isSyncing) return;
+            
+            if (!syncState.isOnline) {
+                showNotification('Cannot sync while offline', 'error');
+                return;
+            }
+
+            if (GITHUB_TOKEN === 'your_github_token_here') {
+                showNotification('GitHub token not configured. Please add your token to enable sync.', 'error');
+                return;
+            }
+
+            // Try to load from GitHub first, then save current data
+            const githubData = await storage.loadFromGitHub();
+            if (githubData && githubData.lastSync) {
+                const localTimestamp = localStorage.getItem('construction-data-timestamp');
+                const githubTimestamp = new Date(githubData.lastSync).getTime();
+                const localTime = localTimestamp ? parseInt(localTimestamp) : 0;
+
+                if (githubTimestamp > localTime) {
+                    // GitHub data is newer
+                    data = githubData;
+                    renderAll();
+                    updateDashboard();
+                    showNotification('Loaded newer data from GitHub', 'info');
+                }
+            }
+
+            // Always save current data to GitHub
+            await storage.saveToGitHub();
+        }
+
+        // Network status monitoring
+        window.addEventListener('online', () => {
+            syncState.isOnline = true;
+            setSyncStatus('synced');
+            showNotification('Back online', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            syncState.isOnline = false;
+            setSyncStatus('offline');
+            showNotification('Working offline', 'info');
+        });
 
         // Load sample data
         function loadSampleData() {
@@ -363,21 +694,17 @@
 
         // Tab switching
         function showTab(tabName) {
-            // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // Remove active from all buttons
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             
-            // Show selected tab
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
             
-            // Update dashboard if dashboard is selected
             if (tabName === 'dashboard') {
                 updateDashboard();
             }
@@ -444,7 +771,7 @@
             `;
         }
 
-        function saveProject(id) {
+        async function saveProject(id) {
             const projectData = {
                 name: document.getElementById('projectName').value,
                 location: document.getElementById('projectLocation').value,
@@ -462,6 +789,7 @@
 
             renderProjects();
             closeModal();
+            await saveAndSync();
         }
 
         function editProject(id) {
@@ -469,10 +797,11 @@
             showModal('Edit Project', createProjectForm(project));
         }
 
-        function deleteProject(id) {
+        async function deleteProject(id) {
             if (confirm('Are you sure you want to delete this project?')) {
                 data.projects = data.projects.filter(p => p.id !== id);
                 renderProjects();
+                await saveAndSync();
             }
         }
 
@@ -495,7 +824,7 @@
             `).join('');
         }
 
-        // Architect functions
+        // Similar functions for Architects, Supervisors, and Contractors
         function createArchitectForm(architect = {}) {
             return `
                 <div class="form-group">
@@ -518,7 +847,7 @@
             `;
         }
 
-        function saveArchitect(id) {
+        async function saveArchitect(id) {
             const architectData = {
                 name: document.getElementById('architectName').value,
                 email: document.getElementById('architectEmail').value,
@@ -535,6 +864,7 @@
 
             renderArchitects();
             closeModal();
+            await saveAndSync();
         }
 
         function editArchitect(id) {
@@ -542,10 +872,11 @@
             showModal('Edit Architect', createArchitectForm(architect));
         }
 
-        function deleteArchitect(id) {
+        async function deleteArchitect(id) {
             if (confirm('Are you sure you want to delete this architect?')) {
                 data.architects = data.architects.filter(a => a.id !== id);
                 renderArchitects();
+                await saveAndSync();
             }
         }
 
@@ -590,7 +921,7 @@
             `;
         }
 
-        function saveSupervisor(id) {
+        async function saveSupervisor(id) {
             const supervisorData = {
                 name: document.getElementById('supervisorName').value,
                 email: document.getElementById('supervisorEmail').value,
@@ -607,6 +938,7 @@
 
             renderSupervisors();
             closeModal();
+            await saveAndSync();
         }
 
         function editSupervisor(id) {
@@ -614,10 +946,11 @@
             showModal('Edit Supervisor', createSupervisorForm(supervisor));
         }
 
-        function deleteSupervisor(id) {
+        async function deleteSupervisor(id) {
             if (confirm('Are you sure you want to delete this supervisor?')) {
                 data.supervisors = data.supervisors.filter(s => s.id !== id);
                 renderSupervisors();
+                await saveAndSync();
             }
         }
 
@@ -666,7 +999,7 @@
             `;
         }
 
-        function saveContractor(id) {
+        async function saveContractor(id) {
             const contractorData = {
                 name: document.getElementById('contractorName').value,
                 company: document.getElementById('contractorCompany').value,
@@ -684,6 +1017,7 @@
 
             renderContractors();
             closeModal();
+            await saveAndSync();
         }
 
         function editContractor(id) {
@@ -691,10 +1025,11 @@
             showModal('Edit Contractor', createContractorForm(contractor));
         }
 
-        function deleteContractor(id) {
+        async function deleteContractor(id) {
             if (confirm('Are you sure you want to delete this contractor?')) {
                 data.contractors = data.contractors.filter(c => c.id !== id);
                 renderContractors();
+                await saveAndSync();
             }
         }
 
@@ -717,14 +1052,54 @@
             `).join('');
         }
 
-        // Initialize app
-        function init() {
-            loadSampleData();
+        function renderAll() {
             renderProjects();
             renderArchitects();
             renderSupervisors();
             renderContractors();
+        }
+
+        // Initialize app
+        async function init() {
+            // Set initial sync status
+            setSyncStatus(syncState.isOnline ? 'synced' : 'offline');
+            
+            // Try to load data in order of preference: GitHub -> localStorage -> sample
+            let loadedData = null;
+            
+            // Try GitHub first
+            if (syncState.isOnline && GITHUB_TOKEN !== 'your_github_token_here') {
+                loadedData = await storage.loadFromGitHub();
+            }
+            
+            // Fallback to localStorage
+            if (!loadedData) {
+                loadedData = storage.loadFromLocalStorage();
+                if (loadedData) {
+                    showNotification('Loaded data from local storage', 'info');
+                }
+            }
+            
+            // Use loaded data or create sample data
+            if (loadedData) {
+                data = loadedData;
+            } else {
+                loadSampleData();
+                storage.saveToLocalStorage();
+                if (syncState.isOnline && GITHUB_TOKEN !== 'your_github_token_here') {
+                    await storage.saveToGitHub();
+                }
+            }
+
+            renderAll();
             updateDashboard();
+
+            // Show token configuration message if needed
+            if (GITHUB_TOKEN === 'your_github_token_here') {
+                setTimeout(() => {
+                    showNotification('Configure your GitHub token in the code to enable sync', 'info');
+                }, 2000);
+            }
         }
 
         // Close modal when clicking outside
