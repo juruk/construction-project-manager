@@ -388,7 +388,14 @@
     <script>
         // Configuration - Replace with your repository details
         const GITHUB_REPO = 'juruk/construction-project-manager';
-        const GITHUB_TOKEN = 'your_github_token_here'; // Users need to add their token
+        // GitHub Token Configuration for 2025:
+        // Create a Fine-grained Personal Access Token with these EXACT permissions:
+        // Repository permissions:
+        //   - Contents: Read and Write (required to read/write construction-data.json)
+        //   - Metadata: Read (required for basic repository access)
+        // Account permissions: None required
+        // Replace 'your_github_token_here' with your actual token:
+        const GITHUB_TOKEN = 'your_github_token_here';
         const DATA_FILE_PATH = 'construction-data.json';
 
         // Data storage
@@ -600,7 +607,7 @@
             }
 
             if (GITHUB_TOKEN === 'your_github_token_here') {
-                showNotification('GitHub token not configured. Please add your token to enable sync.', 'error');
+                showNotification('GitHub token not configured. Please configure your Fine-grained Personal Access Token with Contents (Read & Write) and Metadata (Read) permissions.', 'error');
                 return;
             }
 
@@ -1097,7 +1104,7 @@
             // Show token configuration message if needed
             if (GITHUB_TOKEN === 'your_github_token_here') {
                 setTimeout(() => {
-                    showNotification('Configure your GitHub token in the code to enable sync', 'info');
+                    showNotification('Configure your GitHub Fine-grained Personal Access Token with Contents (Read & Write) and Metadata (Read) permissions to enable sync', 'info');
                 }, 2000);
             }
         }
